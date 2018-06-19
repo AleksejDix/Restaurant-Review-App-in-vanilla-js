@@ -5,11 +5,11 @@
   if (!('serviceWorker' in navigator)) return
 
   navigator.serviceWorker.register('/sw.js')
-    .then(reg => console.log("Holla", reg.scope))
+    .then(console.log)
     .catch(console.log)
 
   window.addEventListener('beforeinstallprompt', e => {
-    console.log('beforeinstallprompt')
+    //console.log('beforeinstallprompt')
     event.preventDefault();
     prompt = event
     return false
