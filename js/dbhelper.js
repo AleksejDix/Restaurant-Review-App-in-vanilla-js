@@ -9,19 +9,19 @@ class DBHelper {
    */
   static get DATABASE_URL() {
     const port = 5500 // Change this to your server port
-    return `http://localhost:${port}/data/restaurants.json`;
+    return `http://localhost:1337/restaurants`;
   }
 
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
+
     let xhr = new XMLHttpRequest();
     xhr.open('GET', DBHelper.DATABASE_URL);
     xhr.onload = () => {
       if (xhr.status === 200) { // Got a success response from server!
-        const json = JSON.parse(xhr.responseText);
-        const restaurants = json.restaurants;
+        const restaurants = JSON.parse(xhr.responseText);
         callback(null, restaurants);
       } else { // Oops!. Got an error from server.
         const error = (`Request failed. Returned status of ${xhr.status}`);
@@ -150,14 +150,15 @@ class DBHelper {
    * Restaurant image URL.
    */
   static imageUrlSetForRestaurant(restaurant) {
+    console.log()
     return (`
-    /img/320/${restaurant.photograph} 1x,
-    /img/480/${restaurant.photograph} 1.5x,
-    /img/640/${restaurant.photograph} 2x`);
+    /img/320/${restaurant.photograph}.jpg 1x,
+    /img/480/${restaurant.photograph}.jpg 1.5x,
+    /img/640/${restaurant.photograph}.jpg 2x`);
   }
 
   static imageUrlForRestaurant(restaurant) {
-    return (`/img/320/${restaurant.photograph}`);
+    return (`/img/320/${restaurant.photograph}.jpg`);
   }
 
   /**

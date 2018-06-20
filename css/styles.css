@@ -211,7 +211,7 @@ label {
   width: 100%;
 }
 
-#restaurants-list li h1 {
+#restaurants-list li h3 {
   color: #1e5919;
   font-family: Arial,sans-serif;
   font-size: 14pt;

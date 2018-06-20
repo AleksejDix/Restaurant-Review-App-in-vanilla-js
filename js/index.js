@@ -9,7 +9,7 @@
     .catch(console.log)
 
   window.addEventListener('beforeinstallprompt', e => {
-    //console.log('beforeinstallprompt')
+    // console.log('beforeinstallprompt')
     event.preventDefault();
     prompt = event
     return false
