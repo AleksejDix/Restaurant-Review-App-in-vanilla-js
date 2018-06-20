@@ -1,4 +1,6 @@
-const cacheName = 'r'
+const staticCacheName = 's-v1'
+const dinamicCacheName = 'd-v1'
+
 const filesToCache = [
   'https://unpkg.com/leaflet@1.3.1/dist/leaflet.css',
   '/offline.html',
@@ -14,7 +16,7 @@ const filesToCache = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches
-      .open(cacheName)
+      .open(staticCacheName)
       .then(cache => {
         cache.addAll(filesToCache)
       })
@@ -22,7 +24,16 @@ self.addEventListener('install', event => {
 })
 
 
-self.addEventListener('activate', () => {
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then(keys => Promise.all(keys.map(key => {
+        if (key != staticCacheName && key != dinamicCacheName) {
+          return caches.delete(key)
+        }
+      })))
+  )
   return self.clients.claim()
 })
 
@@ -36,12 +47,13 @@ self.addEventListener('fetch', event => {
           return fetch(event.request)
             .then(res => {
               return caches
-                .open('dinamic')
+                .open(dinamicCacheName)
                 .then(cache => {
                   cache.put(event.request.url, res.clone())
                   return res
                 })
             })
+            .catch(console.log)
         }
         return response
       })
