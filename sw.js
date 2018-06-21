@@ -1,12 +1,17 @@
-const staticCacheName = 's-v1'
-const dinamicCacheName = 'd-v1'
+importScripts('/js/idb.js');
+importScripts('/js/idb-helper.js')
+
+const staticCacheName = 's-v5'
+const dinamicCacheName = 'd-v5'
 
 const filesToCache = [
   'https://unpkg.com/leaflet@1.3.1/dist/leaflet.css',
   '/offline.html',
   '/css/styles.css',
-  '/data/restaurants.json',
-  '/js/dbhelper.js',
+  '/js/idb.js',
+  '/js/idb-helper.js',
+  '/js/api.js',
+  '/js/city-map.js',
   '/js/main.js',
   'js/restaurant_info.js',
   '/restaurant.html',
@@ -39,25 +44,46 @@ self.addEventListener('activate', event => {
 
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches
-      .match(event.request)
-      .then(response => {
-        if (!response) {
-          return fetch(event.request)
-            .then(res => {
-              return caches
-                .open(dinamicCacheName)
-                .then(cache => {
-                  cache.put(event.request.url, res.clone())
-                  return res
-                })
+
+  const restaurantsEndpoint =  'http://localhost:1337/restaurants'
+  if (event.request.url.includes(restaurantsEndpoint)) {
+    console.log(event.request.url)
+    event.respondWith(
+      fetch(restaurantsEndpoint)
+        .then(res => {
+          const cloneRes = res.clone()
+          cloneRes.json()
+            .then(json => {
+              json.forEach(entry => {
+                DB().clear()
+                DB().set(entry)
+              })
             })
-            .catch(console.log)
-        }
-        return response
-      })
-  )
+          return res
+        })
+    )
+  } else {
+
+    event.respondWith(
+      caches
+        .match(event.request)
+        .then(response => {
+          if (!response) {
+            return fetch(event.request)
+              .then(res => {
+                return caches
+                  .open(dinamicCacheName)
+                  .then(cache => {
+                    cache.put(event.request.url, res.clone())
+                    return res
+                  })
+              })
+              .catch(console.log)
+          }
+          return response
+        })
+    )
+  }
 })
 
 

@@ -1,5 +1,5 @@
 (() => {
-
+  self.api = createApi('http://localhost:1337/restaurants')
   let prompt = null;
 
   if (!('serviceWorker' in navigator)) return
