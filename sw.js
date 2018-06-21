@@ -52,10 +52,10 @@ self.addEventListener('fetch', event => {
       fetch(restaurantsEndpoint)
         .then(res => {
           const cloneRes = res.clone()
+          DB().clear()
           cloneRes.json()
             .then(json => {
               json.forEach(entry => {
-                DB().clear()
                 DB().set(entry)
               })
             })
