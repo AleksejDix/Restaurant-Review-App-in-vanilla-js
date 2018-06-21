@@ -26,6 +26,16 @@ function DB () {
       )
   }
 
+  function remove(id) {
+    return dbPromise
+      .then(db => db
+        .transaction(name, 'readwrite')
+        .objectStore(name)
+        .delete(id)
+        .complete
+      )
+  }
+
   function clear () {
     return dbPromise
       .then(db => db
@@ -39,7 +49,8 @@ function DB () {
   return {
     list,
     clear,
-    set
+    set,
+    remove
   }
 }
 
