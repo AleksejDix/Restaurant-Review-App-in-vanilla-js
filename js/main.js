@@ -12,28 +12,26 @@ document.addEventListener('DOMContentLoaded', event => {
   const cuisinesSelect = document.querySelector('#cuisines-select')
   cuisinesSelect.addEventListener('change', renderRestaurants)
 
-  api
-    .then(({restaurants}) => restaurants.list)
-    .then(renderRestaurants)
+  restaurants.index()
+    .then(restaurants => {
+      renderRestaurants(restaurants)
+      renderNeighborhoods(restaurants)
+      renderCuisines(restaurants)
 
-  api
-    .then(({neighborhoods}) => neighborhoods.list)
-    .then(renderNeighborhoods)
-
-  api
-    .then(({cuisines}) => cuisines.list)
-    .then(renderCuisines)
-
+    })
 });
 
 const restaurantURL    = restaurant => `./restaurant.html?id=${restaurant.id}`
 const restaurantImages = restaurant => `/img/320/${restaurant.photograph}.jpg 1x, /img/480/${restaurant.photograph}.jpg 1.5x, /img/640/${restaurant.photograph}.jpg 2x`
 const restaurantImage  = restaurant => `/img/320/${restaurant.photograph}.jpg`
 
+
 /**
  * Set neighborhoods HTML.
  */
-async function renderNeighborhoods (neighborhoods) {
+async function renderNeighborhoods (restaurants) {
+  const neighborhoods = [...new Set(restaurants.map(r => r.neighborhood))]
+
   const select = document.getElementById('neighborhoods-select');
   neighborhoods.forEach(neighborhood => {
     const option = document.createElement('option');
@@ -41,12 +39,15 @@ async function renderNeighborhoods (neighborhoods) {
     option.value = neighborhood;
     select.append(option);
   });
+  return restaurants
 }
 
 /**
  * Set cuisines HTML.
  */
-async function renderCuisines(cuisines) {
+async function renderCuisines(restaurants) {
+  const cuisines = [...new Set(restaurants.map(r => r.cuisine_type))]
+
   const select = document.getElementById('cuisines-select');
   cuisines.forEach(cuisine => {
     const option = document.createElement('option');
@@ -54,6 +55,8 @@ async function renderCuisines(cuisines) {
     option.value = cuisine;
     select.append(option);
   });
+
+  return restaurants
 }
 
 /**
@@ -69,23 +72,24 @@ const resetRestaurants = () => {
 /**
  * Create all restaurants HTML and add them to the webpage.
  */
-async function renderRestaurants (restaurants) {
+async function renderRestaurants (res) {
+
   resetRestaurants()
 
   let selectedCuisine = 'all'
   let selectedNeighbor = 'all'
 
-  if (restaurants instanceof Event) {
-    event = restaurants
-    const store = await api
-    restaurants = store.restaurants.list
+  if (res instanceof Event) {
+    event = res
+    res = await restaurants.index()
     selectedCuisine = document.querySelector('#cuisines-select').value
     selectedNeighbor = document.querySelector('#neighborhoods-select').value
   }
 
-  filteredRestaurants = restaurants
+  filteredRestaurants = res
     .filter(r => selectedCuisine === 'all' || r.cuisine_type === selectedCuisine)
     .filter(r => selectedNeighbor === 'all' || r.neighborhood === selectedNeighbor)
+
 
   const ul = document.getElementById('restaurants-list');
   if(!ul) return
@@ -93,7 +97,8 @@ async function renderRestaurants (restaurants) {
   filteredRestaurants.forEach(restaurant => {
     ul.append(renderRestaurant(restaurant));
   });
-  //addMarkersToMap(restaurants);
+
+  return res
 }
 
 /**
@@ -126,10 +131,32 @@ const renderRestaurant = (restaurant) => {
   address.innerHTML = restaurant.address;
   card.append(address);
 
+  const cta = document.createElement("div")
+  cta.classList.add('cta')
+
+  const likeBtn = document.createElement("button")
+  likeBtn.classList.add('likeBtn')
+
+
+  const options = {
+    el: likeBtn,
+    id: restaurant.id,
+    text: (restaurant.is_favorite === 'true') ? '⭑' : '⭒',
+    liked: (restaurant.is_favorite === 'true')
+  }
+  cta.append(likeBtn)
+
+  new Like(options)
+
   const more = document.createElement('a');
+  more.classList.add('btn')
   more.innerHTML = 'View Details';
   more.href = restaurantURL(restaurant);
-  card.append(more)
+  cta.append(more)
+
+
+
+  card.append(cta)
 
 
   cityMap.addMarker(restaurant)

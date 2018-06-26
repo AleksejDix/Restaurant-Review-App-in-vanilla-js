@@ -229,15 +229,10 @@ label {
 
 #restaurants-list li a {
   background-color:#1e5919;
-  border-bottom: 3px solid #eee;
   color: #fff;
   display: inline-block;
-  font-size: 10pt;
-  margin: 15px 0 0;
-  padding: 8px 30px 10px;
-  text-align: center;
-  text-decoration: none;
-  text-transform: uppercase;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0px 2px 4px 0 rgba(0,0,0,.18);
 }
 
 
@@ -350,12 +345,12 @@ h2 {
   overflow: hidden;
 }
 #reviews-list li {
-  background-color: #f2f3f4;
+
   display: block;
   list-style-type: none;
   overflow: hidden;
-  padding: 0 20px 20px;
   position: relative;
+  background-color: #f2f3f4;
   padding: 1rem 1.5rem;
 }
 
@@ -365,9 +360,11 @@ h2 {
 
 #reviews-list li p {
   margin: 0 0 10px;
+  line-height: 1.618;
+  color: #444;
 }
 #restaurant-hours td {
-  color: #666;
+  color: #444;
 }
 
 .inside #restaurant-name {
@@ -394,4 +391,120 @@ td {
 
 p {
   max-width: 35em;
+}
+
+
+.review_name {
+  font-weight: 300;
+  color: #444
+}
+
+
+.review-form__form {
+  background-color: #f2f3f4;
+  padding: 1rem;
+}
+
+
+fieldset .flex {
+  justify-content: space-between;
+}
+@media screen and (min-width: 480px)  {
+  fieldset .flex {
+    justify-content: start;
+  }
+}
+
+@media screen and (min-width: 800px)  {
+  .review-form__form {
+    padding: 1rem 1.5rem;
+
+  }
+
+}
+
+legend,
+label div,
+label span {
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 13px;
+  padding: 0.25rem;
+}
+
+textarea,
+select,
+[type="text"] {
+  border: 2px solid #1e5919;
+  border-radius: 0.25rem;
+  width: 100%;
+  line-height: 1.5;
+  font-size: 1.5rem;
+  padding: 0.5rem 1rem;
+}
+
+
+.owl > * + * {
+  margin-top: 1rem;
+}
+
+fieldset {
+  padding: 0;
+  border: none;
+}
+
+fieldset label {
+  min-height: 48px;
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+}
+
+
+
+
+
+fieldset label span {
+  color: #1e5919;
+  font-size: 1.5rem;
+}
+
+.cta  {
+  padding: 1rem 0;
+  display: inline-flex;
+}
+
+.likeBtn,
+.btn {
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 13px;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0px 2px 4px 0 rgba(0,0,0,.18);
+  border: none;
+  color: white;
+  background-color: #1e5919;
+  border-radius: 0.25rem;
+}
+
+.likeBtn {
+  min-width: 40px;
+}
+
+
+.btn:hover {
+  text-decoration: none;
+}
+
+
+
+
+.likeBtn.⭑ {
+  color: gold;
+}
+
+
+
+.flex {
+  display: flex;
 }

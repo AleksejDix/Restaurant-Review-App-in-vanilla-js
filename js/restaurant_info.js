@@ -5,20 +5,35 @@
   /**
    * Initialize map as soon as the page is loaded.
    */
-  document.addEventListener('DOMContentLoaded', async (event) => {
+  document.addEventListener('DOMContentLoaded', event => {
     const url = new URL(window.location.href)
     const id = url.searchParams.get("id")
-    const store = await api
-    const restaurant = store.restaurants.show(id)
-    renderBreadcrumbs(restaurant)
-    renderRestaurant(restaurant)
+
+    restaurants.show(id)
+      .then(restaurant => {
+        renderBreadcrumbs(restaurant)
+        initForm(restaurant.id)
+        initFavorite(restaurant)
+        renderRestaurant(restaurant, initMap(restaurant))
+
+      })
   });
+
+  function initMap(restaurant) {
+    return new CityMap({
+      center: [restaurant.latlng.lat, restaurant.latlng.lng],
+      zoom: 16
+    });
+  }
 
 
   /**
    * Create restaurant HTML and add it to the webpage
    */
-  renderRestaurant = restaurant => {
+  function renderRestaurant (restaurant, map) {
+
+    map.addMarker(restaurant)
+
     const name = document.getElementById('restaurant-name');
     name.innerHTML = restaurant.name;
 
@@ -38,15 +53,10 @@
     if (restaurant.operating_hours) {
       renderRestaurantHours(restaurant.operating_hours);
     }
-    // fill reviews
-    renderReviews(restaurant.reviews);
 
-    const cityMap = new CityMap({
-      center: [restaurant.latlng.lat, restaurant.latlng.lng],
-      zoom: 16
-    });
-
-    cityMap.addMarker(restaurant)
+    restaurantReviews
+      .index(restaurant.id)
+      .then(renderReviews)
   }
 
   /**
@@ -87,8 +97,7 @@
   /**
    * Create all reviews HTML and add them to the webpage.
    */
-  renderReviews = reviews => {
-
+  renderReviews = (reviews) => {
     const container = document.getElementById('reviews-container');
     const title = document.createElement('h2');
     title.innerHTML = 'Reviews';
@@ -100,12 +109,15 @@
       container.appendChild(noReviews);
       return
     }
+    container.appendChild(createReviewList(reviews));
+  }
 
+  function createReviewList (reviews) {
     const ul = document.getElementById('reviews-list');
     reviews.forEach(review => {
       ul.appendChild(createReviewHTML(review));
     });
-    container.appendChild(ul);
+    return ul
   }
 
   /**
@@ -113,18 +125,53 @@
    */
   createReviewHTML = review => {
     const li = document.createElement('li');
-    const name = document.createElement('aside');
+    const name = document.createElement('h3');
+
+    // TODO add DELETE REVIEW offline SYNC
+    // const deleteBtn = document.createElement('btn');
+    // deleteBtn.classList.add('btn')
+    // deleteBtn.textContent = 'delete'
+    // deleteBtn.dataset.id = review.id
+    // deleteBtn.addEventListener('click', deleteReview)
+
+    // function deleteReview(event) {
+    //   reviews
+    //     .destroy(event.target.dataset.id)
+    //     .then(async(review) => {
+    //       const reviews = await restaurantReviews.index(review.restaurant_id)
+    //       const reviewList = document.getElementById('reviews-list');
+    //       const container = document.getElementById('reviews-container');
+    //       reviewList.innerHTML = '';
+    //       container.appendChild(createReviewList(reviews));
+    //     })
+    // }
+
+    // li.appendChild(deleteBtn)
+    const rating = document.createElement('span');
+    rating.classList.add("rating")
+
+    function createStar () {
+      const star = document.createElement('span');
+      star.textContent = '★'
+      return star
+    }
+
+    for (i = 0; i < +review.rating; i++) {
+      const star = createStar()
+      rating.appendChild(star)
+    }
 
     name.classList.add('review_name')
-    const time = `<time>${review.date}</time>`
+    const nameWrapper = document.createElement('span')
+    const date = new Date(review.createdAt)
+    const localDate = date.toLocaleDateString()
 
-    name.innerHTML = `on ${time} by ${review.name}`;
+    const time = `<time>${localDate}</time>`
+    nameWrapper.innerHTML = ` by <strong>${review.name}</strong>, on ${time}`;
+    name.appendChild(rating);
+    name.appendChild(nameWrapper)
 
     li.appendChild(name);
-
-    const rating = document.createElement('p');
-    rating.innerHTML = `Rating: ${review.rating}`;
-    li.appendChild(rating);
 
     const comments = document.createElement('p');
     comments.innerHTML = review.comments;
@@ -143,6 +190,60 @@
     li.innerHTML = restaurant.name;
     breadcrumb.appendChild(li);
   }
+
+
+  function initFavorite(restaurant) {
+    const likeBtn = document.querySelector(".likeBtn")
+
+    const options = {
+      el: likeBtn,
+      id: restaurant.id,
+      text: (restaurant.is_favorite === 'true') ? '⭑' : '⭒',
+      liked: (restaurant.is_favorite === 'true')
+    }
+
+    new Like(options)
+  }
+
+  function initForm(id) {
+    const reviewForm = document.querySelector('.review-form__form')
+    reviewForm.addEventListener('submit', sendForm);
+    function sendForm(event) {
+      event.preventDefault();
+      const entriesIterator = new FormData(event.target).entries()
+
+      const payload = {
+        restaurant_id: id
+      }
+
+      for (const entries of entriesIterator) {
+        const [key, value] = entries
+        payload[key] = value
+      }
+
+      async function updateReviews (id) {
+        const reviews = await restaurantReviews.index(id)
+        const reviewList = document.getElementById('reviews-list');
+        const container = document.getElementById('reviews-container');
+        reviewList.innerHTML = '';
+        container.appendChild(createReviewList(reviews));
+      }
+      if ('serviceWorker' in navigator && "SyncManager" in window) {
+        navigator.serviceWorker.ready.then(sw => {
+          DB().put('form', payload).then(() => {
+            sw.sync.register('sync-form')
+            return payload
+          }).then(data => updateReviews(data.restaurant_id))
+        })
+      } else {
+        reviews
+          .store(payload)
+          .then(console.log)
+      }
+    }
+  }
+
+
 
 })()
 

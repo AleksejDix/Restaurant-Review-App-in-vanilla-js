@@ -1,51 +1,83 @@
-function createApi (endpoint) {
+//     // DB().list().then(data => createStore(data));
+const host = 'http://localhost:1337'
 
-  return new Promise(
-    function (resolve, reject) {
+const like = {
+  index() {
+    return fetch(`${host}/restaurants/?is_favorite=true`).then(res => res.json())
+  },
 
-      let fetched = false
-
-      fetch(endpoint)
-        .then(res => {
-          if (!res.ok) throw new Error(`can't fetch ${endpoint}`)
-          return res.json()
-        })
-        .then(json => {
-          console.log("from Network:", json)
-          fetched = true
-          return createStore(json);
-        })
-        .then(resolve)
-        .catch(console.error)
-
-        if (!fetched) {
-          DB()
-            .list()
-            .then(data => {
-              console.log('from Cache', data)
-              return createStore(data);
-            })
-            .then(resolve)
-        }
-    }
-  )
-
-  function createStore (stores) {
-    return {
-      get restaurants () {
-        const list = stores
-        const show = id => this.restaurants.list.find(r => r.id === +id)
-        return { list, show }
+  update(id, payload) {
+    const options = {
+      headers: {
+        'content-type': 'application/json'
       },
-      get cuisines () {
-        const list = [...new Set(this.restaurants.list.map(r => r.cuisine_type))]
-        return { list }
-
-      },
-      get neighborhoods () {
-        const list = [...new Set(this.restaurants.list.map(r => r.neighborhood))]
-        return { list }
-      }
+      method: 'PUT',
+      mode: 'cors'
     }
+    const url = `${host}/restaurants/${id}/?is_favorite=${payload}`
+    return fetch(url, options).then(res => res.json())
+  }
+}
+
+const restaurants = {
+  index() {
+    return fetch(`${host}/restaurants/`)
+      .then(res => res.json())
+      .catch(() => DB().getAll('restaurants'))
+  },
+
+  show(id) {
+    return fetch(`${host}/restaurants/${id}/`)
+      .then(res => res.json())
+      .catch(() => DB().getById('restaurants', +id))
+  }
+}
+
+
+const restaurantReviews = {
+  index(restaurantID) {
+    return fetch(`${host}/reviews/?restaurant_id=${restaurantID}`)
+      .then(res => res.json())
+      .catch(err => DB().getByIndex('reviews', 'restaurant_id', restaurantID))
+  }
+}
+
+const reviews = {
+  index() {
+    return fetch(`${host}/reviews/`)
+      .then(res => res.json())
+  },
+
+  store(payload) {
+    const options = {
+      headers: {
+        'content-type': 'application/json'
+      },
+      method: 'POST',
+      mode: 'cors',
+      body: JSON.stringify(payload),
+    }
+    return fetch(`${host}/reviews/`, options)
+      .then(res => res.json())
+  },
+
+  update(id, payload) {
+    // const payload = {
+    //   "name": <reviewer_name>,
+    //   "rating": <rating>,
+    //   "comments": <comment_text>
+    // }
+    const options = {
+      method: 'put',
+      body: JSON.stringify(payload)
+    }
+    return fetch(`${host}/reviews/${id}`, options).then(res => res.json())
+  },
+
+  destroy(id) {
+    const options = {
+      method: 'delete'
+    }
+    return fetch(`${host}/reviews/${id}`, options).then(res => res.json())
   }
 }
